@@ -1,8 +1,10 @@
 #ifndef ___SIMPLE_MQTT_H_
 #define ___SIMPLE_MQTT_H_
-#include<map>
-#include<list>
-#include<Arduino.h>
+
+#include <map>
+#include <list>
+#include <Arduino.h>
+
 typedef enum {
   SUBSCRIBE,
   UNSUBSCRIBE,
@@ -99,7 +101,7 @@ class SimpleMQTT {
         bool _rawIf(MQTT_IF ifType,const char* type, const char* name);
         void (*publishCallBack)(const char *topic, const char* value);
 
-        void parse2(const char *c,int l, bool subscribeSequance);
+        void parse2(const char *c, unsigned int l, bool subscribeSequance);
         bool send(const char *mqttMsg, int len, uint32_t replyId);
         bool compare(MQTT_IF ifType, const char* type, const char* name);
 
