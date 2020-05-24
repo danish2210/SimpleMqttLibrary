@@ -4,9 +4,12 @@
 #include "base64.h"
 #include <safememcpy.h>
 
-SimpleMQTT::SimpleMQTT(int ttl, const char *deviceName) {
+SimpleMQTT::SimpleMQTT(int ttl, const char *deviceName, uint16_t tryCount, int timeoutMs, uint16_t backoffMs) {
   buffer[0] = 0;
   this->ttl = ttl;
+  this->tryCount = tryCount;
+  this->timeoutMs = timeoutMs;
+  this->backoffMs = backoffMs;
   myDeviceName = deviceName;
   static SimpleMQTT *myself = this;
   espNowFloodingMesh_RecvCB([](const uint8_t *data, int len, uint32_t replyPrt) {
@@ -17,6 +20,12 @@ SimpleMQTT::SimpleMQTT(int ttl, const char *deviceName) {
 }
 
 SimpleMQTT::~SimpleMQTT() {
+}
+
+void SimpleMQTT::setTimeouts(uint16_t tryCount, int timeoutMs, uint16_t backoffMs) {
+  this->tryCount = tryCount;
+  this->timeoutMs = timeoutMs;
+  this->backoffMs = backoffMs;
 }
 
 bool SimpleMQTT::compareTopic(const char* topic, const char* deviceName, const char* t) {
@@ -74,11 +83,10 @@ bool SimpleMQTT::_raw(Mqtt_cmd cmd, const char* type, const std::list<const char
   char *p = buffer;
 
   bool removeFromVector=false;
-  //const char * name = names.front();
+  const char * name = names.front();
 
-  bool addToVector=false;
+  bool addToVector = false;
   bool ret = true;
-
 
   int c = 0;
   bool first = true;
@@ -86,18 +94,18 @@ bool SimpleMQTT::_raw(Mqtt_cmd cmd, const char* type, const std::list<const char
   p += snprintf(p, sizeof(buffer)-(p-buffer), "MQTT %s\n",  myDeviceName.c_str());
 
   for (auto const& name : names) {
-    if (c>2) {
-      if(!send(buffer, (int)(p - buffer) + 1, 0)) {
-        ret=false;
+    if (c > 2) {
+      if (!send(buffer, (int)(p - buffer) + 1, 0)) {
+        ret = false;
       }
       p = buffer;
       p += snprintf(p, sizeof(buffer)-(p-buffer), "MQTT %s\n",  myDeviceName.c_str());
-      c=0;
-      first=true;
+      c = 0;
+      first = true;
     }
 
-    if(cmd==SUBSCRIBE) {
-      if(first) {
+    if (cmd == SUBSCRIBE) {
+      if (first) {
         p += snprintf(p, sizeof(buffer)-(p-buffer), "S:%s/%s/%s/set\n", myDeviceName.c_str(), type, name);
         p += snprintf(p, sizeof(buffer)-(p-buffer), "G:.../value\n");
         first = false;
@@ -106,30 +114,30 @@ bool SimpleMQTT::_raw(Mqtt_cmd cmd, const char* type, const std::list<const char
         p += snprintf(p, sizeof(buffer)-(p-buffer), "G:.../value\n");
       }
       addToVector = true;
-    } else if(cmd==UNSUBSCRIBE) {
-      if(first) {
+    } else if (cmd == UNSUBSCRIBE) {
+      if (first) {
         p += snprintf(p, sizeof(buffer)-(p-buffer),"U:%s/%s/%s/set\n", myDeviceName.c_str(),type, name);
-        first=false;
+        first = false;
       } else {
         p += snprintf(p, sizeof(buffer)-(p-buffer),"U:../%s/set\n", name);
       }
       removeFromVector = true;
     }
-    else if (cmd==GET){
+    else if (cmd == GET){
       if (first) {
         p += snprintf(p, sizeof(buffer)-(p-buffer),"G:%s/%s/%s/value\n", myDeviceName.c_str(), type, name);
         p += snprintf(p, sizeof(buffer)-(p-buffer),"G:.../set\n");
-        first=false;
+        first = false;
       } else {
         p += snprintf(p, sizeof(buffer)-(p-buffer),"G:../%s/value\n", name);
         p += snprintf(p, sizeof(buffer)-(p-buffer),"G:.../set\n");
       }
       addToVector = true;
     }
-    else if (cmd==PUBLISH){
-      if(first) {
+    else if (cmd == PUBLISH){
+      if (first) {
       p += snprintf(p, sizeof(buffer)-(p-buffer),"P:%s/%s/%s/value %s\n", myDeviceName.c_str(), type, name, value);
-      first=false;
+      first = false;
       } else {
         p += snprintf(p, sizeof(buffer)-(p-buffer),"P:../%s/value %s\n", name, value);
       }
@@ -141,7 +149,7 @@ bool SimpleMQTT::_raw(Mqtt_cmd cmd, const char* type, const std::list<const char
   if (!send(buffer, (int)(p - buffer) + 1, 0)) {
       ret = false;
   }
-  if(addToVector) {
+  if (addToVector) {
     for (auto const& name : names) {
       snprintf(buffer, sizeof(buffer), "%s/%s/%s/set", myDeviceName.c_str(), type, name);
       addtopicToVector(buffer);
@@ -149,7 +157,7 @@ bool SimpleMQTT::_raw(Mqtt_cmd cmd, const char* type, const std::list<const char
       addtopicToVector(buffer);
     }
   }
-  if(removeFromVector) {
+  if (removeFromVector) {
     for (auto const& name : names) {
       snprintf(buffer, sizeof(buffer), "%s/%s/%s/set", myDeviceName.c_str(), type, name);
       removeTopicFomVector(buffer);
@@ -214,7 +222,7 @@ bool SimpleMQTT::_shutter(Mqtt_cmd cmd, const std::list<const char*> & names, MQ
 bool SimpleMQTT::_bin(Mqtt_cmd cmd,  const std::list<const char*> & names, const uint8_t* data, int len) {
   if(data!=NULL){
     char b[250];
-    if(!toBase64(b, sizeof(b), data, len)){
+    if (!toBase64(b, sizeof(b), data, len)) {
       return false;
     }
     return _raw(cmd, "bin", names, b);
@@ -447,14 +455,14 @@ bool SimpleMQTT::send(const char *mqttMsg, int len, uint32_t replyId) {
   #endif
 
   if (replyId == 0) {
-    bool status = espNowFloodingMesh_sendAndWaitReply((uint8_t*)mqttMsg, len, ttl, 3, [](const uint8_t *data, int size) {
+    bool status = espNowFloodingMesh_sendAndWaitReply((uint8_t*)mqttMsg, len, ttl, tryCount, [](const uint8_t *data, int size) {
       if (size > 0) {
         myself->parse(data, size, 0, true); //Parse simple Mqtt protocol messages
       }
-    }); //Send MQTT commands via mesh network
+    }, timeoutMs, 1, backoffMs); // Send MQTT commands via mesh network
 
     if (!status) {
-      //Send failed, no connection to master??? Reboot ESP???
+      // Send failed, no connection to master??? Reboot ESP???
       #ifdef DEBUG_PRINTS
         Serial.println("Timeout");
       #endif

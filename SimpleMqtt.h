@@ -36,8 +36,9 @@ typedef enum {
 
 class SimpleMQTT {
     public:
-        SimpleMQTT(int ttl, const char *myDeviceName);
+        SimpleMQTT(int ttl, const char *myDeviceName, uint16_t tryCount=5, int timeoutMs=500, uint16_t backoffMs=100);
         ~SimpleMQTT();
+        void setTimeouts(uint16_t tryCount, int timeoutMs, uint16_t backoffMs); 
         bool publish(const char* deviceName, const char* parameterName, const char *value);
 
         bool getTopic(const char* devName, const char *valName);
@@ -112,6 +113,9 @@ class SimpleMQTT {
         const char* decompressTopic(const char*topic);
 
         int ttl;
+        uint16_t tryCount;
+        int timeoutMs;
+        uint16_t backoffMs;
 
         const char *_topic;
         const char* _value;
