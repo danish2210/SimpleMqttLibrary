@@ -1,18 +1,18 @@
 {
   "name": "SimpleMqttLibrary",
-  "version": "0.0.1",
-  "keywords": "MQTT Fooling Mesh"
-  "description": "Simple MQTT  library",
+  "version": "2.0.1",
+  "keywords": "MQTT Flooding Mesh",
+  "description": "Simple MQTT library",
   "examples": "examples/*/*.ino",
   "repository": {
     "type": "git",
-    "url": "https://github.com/arttupii/SimpleMqttLibrary"
+    "url": "https://github.com/arttupii/SimpleMqttLibrary2"
   },
   "authors": [
     {
-      "name": "arttupii",
-      "email": "arttupii@gmail.com",
-      "url": "https://github.com/arttupii/SimpleMqttLibrary",
+      "name": "Leodesigner",
+      "email": "anvivaldi@gmail.com",
+      "url": "https://github.com/arttupii/SimpleMqttLibrary2",
       "maintainer": true
     }
   ],
