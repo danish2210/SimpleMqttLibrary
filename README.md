@@ -1,39 +1,43 @@
-## MQTT library to flooding mesh network
+## SimpleMQTTLibrary (Version2) for flooding mesh network
+fork from: https://github.com/arttupii/SimpleMqttLibrary
 
-example project: https://github.com/arttupii/EspNowFloodingMesh/tree/master/arduinoSlaveNode/main
+Version 2 Features added:
+- async publish/subscribe 
+- message delivery guarantee: repeat lost messages with timeout/backoff/repeat settings
+- duplicate message cache, now we receive unique MQTT message only once
+- secure random generator used
+- new raw messages callback (see examples: TODO)
+- resend message loop (must be called periodically)
+- modified message format for more concise protocol
+- main gateway node name is 'm' (DestinationDeviceName) (gateway to mqtt broker)
 
 
 ### Protocol messages:
-#### Subscribe topic device1/led/value
+DestinationDeviceName is usually a mqtt gateway name 'm'
+
+Example:
 ```
-"MQTT myDeviceName"
-S:device1/led/value
+"MQTT SrcNodeName/MsgUUID"
+P:DestinationNodeName/temp/bme280/value 23.54
 "
 ```
 
-#### Unsubscribe topic device1/led/value
+#### Subscribe topic nodename/led/value
 ```
-"MQTT myDeviceName"
-U:device1/led/value
+"MQTT nodename/MsgUUID"
+S:m/led/value
 "
 ```
 
-#### Get topic device1/led/value without subscribing
+#### Publish topic nodename/led/value
 ```
-"MQTT myDeviceName"
-G:device1/led/value
-"
-```
-
-#### Publish topic device1/led/value
-```
-"MQTT myDeviceName"
-P:device1/led/value on
+"MQTT nodename/MsgUUID"
+P:m/temp/bme280/value 23.54
 "
 ```
 #### Multiple MQTT commands in the same message
 ```
-"MQTT myDeviceName"
+"MQTT nodename/MsgUUID"
 G:device1/switch/led/value
 S:device1/switch/led/set
 G:device1/switch/led1/value
@@ -46,7 +50,7 @@ S:device2/switch/led/set
 ```
 ##### "Compressed" message
 ```
-"MQTT myDeviceName"
+"MQTT nodename/MsgUUID"
 G:device1/switch/led/value     -->Topic is device1/switch/led/value
 S:.../set                      -->Topic is device1/switch/led/set
 G:../led1/value                -->Topic is device1/switch/led1/value
