@@ -1,9 +1,9 @@
 #ifndef __BASE__H_
-#define  __BASE__H_
-//#include<Arduino.h>
-typedef unsigned char uint8_t;
+#define __BASE__H_
 
-bool toBase64(char *buf, int bufSize, const uint8_t* input, int inputSize);
-int fromBase64(uint8_t *buf, int bufSize, const char* input);
+int Base64decode_len(const char *bufcoded);
+int Base64decode(char *bufplain, const char *bufcoded);
+int Base64encode_len(int len);
+int Base64encode(char *encoded, const char *string, int len);
 
 #endif
