@@ -2,6 +2,7 @@
 fork from: https://github.com/arttupii/SimpleMqttLibrary
 
 Version 2 Features added:
+- bugfixes
 - async publish/subscribe 
 - message delivery guarantee: repeat lost messages with timeout/backoff/repeat settings
 - duplicate message cache, now we receive unique MQTT message only once
@@ -10,6 +11,7 @@ Version 2 Features added:
 - resend message loop (must be called periodically)
 - modified message format for more concise protocol
 - main gateway node name is 'm' (DestinationDeviceName) (gateway to mqtt broker)
+- new base64 library
 
 
 ### Protocol messages:
