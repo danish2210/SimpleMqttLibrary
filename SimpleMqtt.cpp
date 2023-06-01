@@ -9,7 +9,7 @@
 #define SECURERANDOM(min, max) secureRandom(min, max)
 #endif
 
-#include "base64.h"
+#include "base64_util.h"
 
 // for mqtt message id's cache
 struct mqtt_msgid_item mqtt_mids[MQTT_MSG_ID_LIST_SIZE];
