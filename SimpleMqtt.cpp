@@ -32,7 +32,10 @@ SimpleMQTT::SimpleMQTT(int ttl, const char *deviceName, uint16_t tryCount,
   telemetry_t.rtt_min = 0xFFFF;
   this->op_mode = MODE_NODE_STD;
   this->rawCallBack = NULL;
-  myDeviceName = deviceName;
+  char ssid[13];
+  snprintf(ssid, 13, "%llX", ESP.getEfuseMac());
+  myDeviceName = ssid;
+  // myDeviceName = deviceName;
   mc_used_bytes = 0;
   mc_used_slots = 0;
   static SimpleMQTT *myself = this;
