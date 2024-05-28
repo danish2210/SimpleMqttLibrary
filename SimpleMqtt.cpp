@@ -34,7 +34,7 @@ SimpleMQTT::SimpleMQTT(int ttl, const char *deviceName, uint16_t tryCount,
   this->rawCallBack = NULL;
   char ssid[13];
   #ifdef ESP8266
-    sniprintf(ssid, 13, "%X", ESP.getChipId());
+    sniprintf(ssid, 13, "%llX", ESP.getChipId());
   #endif
 
   #ifdef ESP32
